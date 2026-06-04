@@ -16,3 +16,7 @@ def root():
 app.include_router(router_clientes)
 app.include_router(router_facturas)
 app.include_router(router_transacciones)
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="127.0.0.1", port=8000)
