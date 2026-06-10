@@ -2,59 +2,47 @@ from fastapi import APIRouter, HTTPException
 from app.models.facturas import Factura, FacturaCrear
 from app.database import lista_facturas
 
-router_facturas = APIRouter()
+# Configuración del enrutador con prefijo y etiquetas para Swagger
+router_facturas = APIRouter(
+    prefix="/facturas",
+    tags=["Facturas"]
+)
 
 # VER TODAS LAS FACTURAS
-@router_facturas.get("/facturas")
+@router_facturas.get("/")
 def listar_facturas():
-    # Devolvemos las facturas incluyendo el valor_total calculado en cada una
-    resultado = []
-    for f in lista_facturas:
-        datos = f.dict()
-        datos["valor_total"] = f.valor_total
-        resultado.append(datos)
-    return resultado
+    return lista_facturas
 
-# VER UNA FACTURA
-@router_facturas.get("/facturas/{id}")
+# VER UNA FACTURA POR ID
+@router_facturas.get("/{id}")
 def obtener_factura(id: int):
-    for f in lista_facturas:
-        if f.id == id:
-            datos = f.dict()
-            datos["valor_total"] = f.valor_total
-            return datos
+    for factura in lista_facturas:
+        if factura.id == id:
+            return factura
     raise HTTPException(status_code=404, detail="Factura no encontrada")
 
-# CREAR FACTURA
-@router_facturas.post("/facturas")
-def crear_factura(factura: Factura):
-    lista_facturas.append(factura)
-    return {
-        "mensaje": "Factura creada correctamente",
-        "factura": factura.dict(),
-        "valor_total": factura.valor_total
-    }
+# CREAR UNA FACTURA
+@router_facturas.post("/")
+def crear_factura(factura: FacturaCrear):
+    nuevo_id = len(lista_facturas) + 1
+    nueva_factura = Factura(id=nuevo_id, **factura.dict())
+    lista_facturas.append(nueva_factura)
+    return nueva_factura
 
-# EDITAR FACTURA (PUT)
-@router_facturas.put("/facturas/{id}")
-def editar_factura(id: int, datos_actualizados: FacturaCrear):
-    for f in lista_facturas:
-        if f.id == id:
-            f.fecha = datos_actualizados.fecha
-            f.cliente = datos_actualizados.cliente
-            f.lista_transacciones = datos_actualizados.lista_transacciones
-            return {
-                "mensaje": "Factura actualizada",
-                "factura": f.dict(),
-                "valor_total": f.valor_total
-            }
+# EDITAR UNA FACTURA
+@router_facturas.put("/{id}")
+def actualizar_factura(id: int, factura_actualizada: FacturaCrear):
+    for index, factura in enumerate(lista_facturas):
+        if factura.id == id:
+            lista_facturas[index] = Factura(id=id, **factura_actualizada.dict())
+            return lista_facturas[index]
     raise HTTPException(status_code=404, detail="Factura no encontrada")
 
-# ELIMINAR FACTURA (DELETE)
-@router_facturas.delete("/facturas/{id}")
+# ELIMINAR UNA FACTURA
+@router_facturas.delete("/{id}")
 def eliminar_factura(id: int):
-    for index, f in enumerate(lista_facturas):
-        if f.id == id:
+    for index, factura in enumerate(lista_facturas):
+        if factura.id == id:
             lista_facturas.pop(index)
-            return {"mensaje": "Factura eliminada"}
+            return {"detail": "Factura eliminada con éxito"}
     raise HTTPException(status_code=404, detail="Factura no encontrada")
