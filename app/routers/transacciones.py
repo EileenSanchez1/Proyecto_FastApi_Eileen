@@ -2,43 +2,47 @@ from fastapi import APIRouter, HTTPException
 from app.models.transacciones import Transaccion, TransaccionCrear
 from app.database import lista_transacciones
 
-router_transacciones = APIRouter()
+# Configuración del enrutador con prefijo y etiquetas para Swagger
+router_transacciones = APIRouter(
+    prefix="/transacciones",
+    tags=["Transacciones"]
+)
 
 # VER TODAS LAS TRANSACCIONES
-@router_transacciones.get("/transacciones")
+@router_transacciones.get("/")
 def listar_transacciones():
     return lista_transacciones
 
-# VER UNA TRANSACCIÓN
-@router_transacciones.get("/transacciones/{id}")
+# VER UNA TRANSACCIÓN POR ID
+@router_transacciones.get("/{id}")
 def obtener_transaccion(id: int):
-    for t in lista_transacciones:
-        if t.id == id:
-            return t
+    for transaccion in lista_transacciones:
+        if transaccion.id == id:
+            return transaccion
     raise HTTPException(status_code=404, detail="Transacción no encontrada")
 
-# CREAR TRANSACCIÓN
-@router_transacciones.post("/transacciones")
-def crear_transaccion(transaccion: Transaccion):
-    lista_transacciones.append(transaccion)
-    return {"mensaje": "Transacción creada", "transaccion": transaccion}
+# CREAR UNA TRANSACCIÓN
+@router_transacciones.post("/")
+def crear_transaccion(transaccion: TransaccionCrear):
+    nuevo_id = len(lista_transacciones) + 1
+    nueva_transaccion = Transaccion(id=nuevo_id, **transaccion.dict())
+    lista_transacciones.append(nueva_transaccion)
+    return nueva_transaccion
 
-# EDITAR TRANSACCIÓN (PUT)
-@router_transacciones.put("/transacciones/{id}")
-def editar_transaccion(id: int, datos_actualizados: TransaccionCrear):
-    for t in lista_transacciones:
-        if t.id == id:
-            t.valor_unitario = datos_actualizados.valor_unitario
-            t.cantidad = datos_actualizados.cantidad
-            t.factura_id = datos_actualizados.factura_id
-            return {"mensaje": "Transacción actualizada", "transaccion": t}
+# EDITAR UNA TRANSACCIÓN
+@router_transacciones.put("/{id}")
+def actualizar_transaccion(id: int, transaccion_actualizada: TransaccionCrear):
+    for index, transaccion in enumerate(lista_transacciones):
+        if transaccion.id == id:
+            lista_transacciones[index] = Transaccion(id=id, **transaccion_actualizada.dict())
+            return lista_transacciones[index]
     raise HTTPException(status_code=404, detail="Transacción no encontrada")
 
-# ELIMINAR TRANSACCIÓN (DELETE)
-@router_transacciones.delete("/transacciones/{id}")
+# ELIMINAR UNA TRANSACCIÓN
+@router_transacciones.delete("/{id}")
 def eliminar_transaccion(id: int):
-    for index, t in enumerate(lista_transacciones):
-        if t.id == id:
+    for index, transaccion in enumerate(lista_transacciones):
+        if transaccion.id == id:
             lista_transacciones.pop(index)
-            return {"mensaje": "Transacción eliminada"}
+            return {"detail": "Transacción eliminada con éxito"}
     raise HTTPException(status_code=404, detail="Transacción no encontrada")
