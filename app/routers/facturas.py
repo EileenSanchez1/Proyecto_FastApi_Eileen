@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
+from datetime import datetime
 
 from app.database import get_session
 from app.models.facturas import Factura
@@ -30,9 +31,12 @@ def obtener_factura(id: int, session: Session = Depends(get_session)):
 # CREAR FACTURA
 @router_facturas.post("/", response_model=Factura)
 def crear_factura(factura: Factura, session: Session = Depends(get_session)):
+    factura.fecha = datetime.now()
+
     session.add(factura)
     session.commit()
     session.refresh(factura)
+
     return factura
 
 
