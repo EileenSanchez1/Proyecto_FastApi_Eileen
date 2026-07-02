@@ -1,48 +1,69 @@
-from fastapi import APIRouter, HTTPException
-from app.models.clientes import Cliente, ClienteCrear
-from app.database import lista_clientes
+from fastapi import APIRouter, Depends, HTTPException
+from sqlmodel import Session, select
 
-# Configuración del enrutador con prefijo y etiquetas para Swagger
+from app.database import get_session
+from app.models.clientes import Cliente
+
 router_clientes = APIRouter(
     prefix="/clientes",
     tags=["Clientes"]
 )
 
-# VER TODOS LOS CLIENTES
-@router_clientes.get("/")
-def listar_clientes():
-    return lista_clientes
 
-# VER UN CLIENTE POR ID
-@router_clientes.get("/{id}")
-def obtener_cliente(id: int):
-    for cliente in lista_clientes:
-        if cliente.id == id:
-            return cliente
-    raise HTTPException(status_code=404, detail="Cliente no encontrado")
+# LISTAR CLIENTES
+@router_clientes.get("/", response_model=list[Cliente])
+def listar_clientes(session: Session = Depends(get_session)):
+    return session.exec(select(Cliente)).all()
 
-# CREAR UN CLIENTE
-@router_clientes.post("/")
-def crear_cliente(cliente: ClienteCrear):
-    nuevo_id = len(lista_clientes) + 1
-    nuevo_cliente = Cliente(id=nuevo_id, **cliente.dict())
-    lista_clientes.append(nuevo_cliente)
-    return nuevo_cliente
 
-# EDITAR UN CLIENTE
-@router_clientes.put("/{id}")
-def actualizar_cliente(id: int, cliente_actualizado: ClienteCrear):
-    for index, cliente in enumerate(lista_clientes):
-        if cliente.id == id:
-            lista_clientes[index] = Cliente(id=id, **cliente_actualizado.dict())
-            return lista_clientes[index]
-    raise HTTPException(status_code=404, detail="Cliente no encontrado")
+# OBTENER CLIENTE POR ID
+@router_clientes.get("/{id}", response_model=Cliente)
+def obtener_cliente(id: int, session: Session = Depends(get_session)):
+    cliente = session.get(Cliente, id)
 
-# ELIMINAR UN CLIENTE
+    if not cliente:
+        raise HTTPException(status_code=404, detail="Cliente no encontrado")
+
+    return cliente
+
+
+# CREAR CLIENTE
+@router_clientes.post("/", response_model=Cliente)
+def crear_cliente(cliente: Cliente, session: Session = Depends(get_session)):
+    session.add(cliente)
+    session.commit()
+    session.refresh(cliente)
+    return cliente
+
+
+# ACTUALIZAR CLIENTE
+@router_clientes.put("/{id}", response_model=Cliente)
+def actualizar_cliente(id: int, datos: Cliente, session: Session = Depends(get_session)):
+    cliente = session.get(Cliente, id)
+
+    if not cliente:
+        raise HTTPException(status_code=404, detail="Cliente no encontrado")
+
+    cliente.nombre = datos.nombre
+    cliente.edad = datos.edad
+    cliente.descripcion = datos.descripcion
+
+    session.add(cliente)
+    session.commit()
+    session.refresh(cliente)
+
+    return cliente
+
+
+# ELIMINAR CLIENTE
 @router_clientes.delete("/{id}")
-def eliminar_cliente(id: int):
-    for index, cliente in enumerate(lista_clientes):
-        if cliente.id == id:
-            lista_clientes.pop(index)
-            return {"detail": "Cliente eliminado con éxito"}
-    raise HTTPException(status_code=404, detail="Cliente no encontrado")
+def eliminar_cliente(id: int, session: Session = Depends(get_session)):
+    cliente = session.get(Cliente, id)
+
+    if not cliente:
+        raise HTTPException(status_code=404, detail="Cliente no encontrado")
+
+    session.delete(cliente)
+    session.commit()
+
+    return {"mensaje": "Cliente eliminado correctamente"}
