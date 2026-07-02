@@ -1,48 +1,70 @@
-from fastapi import APIRouter, HTTPException
-from app.models.transacciones import Transaccion, TransaccionCrear
-from app.database import lista_transacciones
+from fastapi import APIRouter, Depends, HTTPException
+from sqlmodel import Session, select
 
-# Configuración del enrutador con prefijo y etiquetas para Swagger
+from app.database import get_session
+from app.models.transacciones import Transaccion
+
 router_transacciones = APIRouter(
     prefix="/transacciones",
     tags=["Transacciones"]
 )
 
-# VER TODAS LAS TRANSACCIONES
-@router_transacciones.get("/")
-def listar_transacciones():
-    return lista_transacciones
 
-# VER UNA TRANSACCIÓN POR ID
-@router_transacciones.get("/{id}")
-def obtener_transaccion(id: int):
-    for transaccion in lista_transacciones:
-        if transaccion.id == id:
-            return transaccion
-    raise HTTPException(status_code=404, detail="Transacción no encontrada")
+# LISTAR TRANSACCIONES
+@router_transacciones.get("/", response_model=list[Transaccion])
+def listar_transacciones(session: Session = Depends(get_session)):
+    return session.exec(select(Transaccion)).all()
 
-# CREAR UNA TRANSACCIÓN
-@router_transacciones.post("/")
-def crear_transaccion(transaccion: TransaccionCrear):
-    nuevo_id = len(lista_transacciones) + 1
-    nueva_transaccion = Transaccion(id=nuevo_id, **transaccion.dict())
-    lista_transacciones.append(nueva_transaccion)
-    return nueva_transaccion
 
-# EDITAR UNA TRANSACCIÓN
-@router_transacciones.put("/{id}")
-def actualizar_transaccion(id: int, transaccion_actualizada: TransaccionCrear):
-    for index, transaccion in enumerate(lista_transacciones):
-        if transaccion.id == id:
-            lista_transacciones[index] = Transaccion(id=id, **transaccion_actualizada.dict())
-            return lista_transacciones[index]
-    raise HTTPException(status_code=404, detail="Transacción no encontrada")
+# OBTENER TRANSACCION
+@router_transacciones.get("/{id}", response_model=Transaccion)
+def obtener_transaccion(id: int, session: Session = Depends(get_session)):
+    transaccion = session.get(Transaccion, id)
 
-# ELIMINAR UNA TRANSACCIÓN
+    if not transaccion:
+        raise HTTPException(status_code=404, detail="Transacción no encontrada")
+
+    return transaccion
+
+
+# CREAR TRANSACCION
+@router_transacciones.post("/", response_model=Transaccion)
+def crear_transaccion(transaccion: Transaccion, session: Session = Depends(get_session)):
+    session.add(transaccion)
+    session.commit()
+    session.refresh(transaccion)
+
+    return transaccion
+
+
+# ACTUALIZAR TRANSACCION
+@router_transacciones.put("/{id}", response_model=Transaccion)
+def actualizar_transaccion(id: int, datos: Transaccion, session: Session = Depends(get_session)):
+    transaccion = session.get(Transaccion, id)
+
+    if not transaccion:
+        raise HTTPException(status_code=404, detail="Transacción no encontrada")
+
+    transaccion.valor_unitario = datos.valor_unitario
+    transaccion.cantidad = datos.cantidad
+    transaccion.factura_id = datos.factura_id
+
+    session.add(transaccion)
+    session.commit()
+    session.refresh(transaccion)
+
+    return transaccion
+
+
+# ELIMINAR TRANSACCION
 @router_transacciones.delete("/{id}")
-def eliminar_transaccion(id: int):
-    for index, transaccion in enumerate(lista_transacciones):
-        if transaccion.id == id:
-            lista_transacciones.pop(index)
-            return {"detail": "Transacción eliminada con éxito"}
-    raise HTTPException(status_code=404, detail="Transacción no encontrada")
+def eliminar_transaccion(id: int, session: Session = Depends(get_session)):
+    transaccion = session.get(Transaccion, id)
+
+    if not transaccion:
+        raise HTTPException(status_code=404, detail="Transacción no encontrada")
+
+    session.delete(transaccion)
+    session.commit()
+
+    return {"mensaje": "Transacción eliminada correctamente"}
