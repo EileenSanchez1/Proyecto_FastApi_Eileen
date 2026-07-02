@@ -1,5 +1,14 @@
-lista_clientes = []
+from sqlmodel import SQLModel, create_engine, Session
 
-lista_facturas = []
+DATABASE_URL = "sqlite:///./base_datos.db"
 
-lista_transacciones = []
+engine = create_engine(DATABASE_URL, echo=True)
+
+
+def crear_tablas():
+    SQLModel.metadata.create_all(engine)
+
+
+def get_session():
+    with Session(engine) as session:
+        yield session

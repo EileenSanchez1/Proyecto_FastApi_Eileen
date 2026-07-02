@@ -1,17 +1,13 @@
-from pydantic import BaseModel
+from typing import Optional
 from datetime import datetime
-from typing import List
-from app.models.clientes import Cliente
-from app.models.transacciones import Transaccion
+from sqlmodel import SQLModel, Field
 
-class FacturaCrear(BaseModel):
-    fecha: datetime = datetime.now()
-    cliente: Cliente
-    lista_transacciones: List[Transaccion] = []
 
-class Factura(FacturaCrear):
-    id: int
+class Factura(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    fecha: datetime = Field(default_factory=datetime.now)
+    cliente_id: int
 
     @property
     def valor_total(self) -> float:
-        return sum(t.valor_unitario * t.cantidad for t in self.lista_transacciones)
+        return 0
