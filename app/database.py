@@ -5,9 +5,10 @@ DATABASE_URL = "sqlite:///./base_datos.db"
 engine = create_engine(
     DATABASE_URL,
     echo=True,
-    connect_args={"check_same_thread": False}
+    connect_args={
+        "check_same_thread": False
+    }
 )
-
 
 def crear_tablas():
     SQLModel.metadata.create_all(engine)
