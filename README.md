@@ -1,14 +1,14 @@
-# API Clientes FastAPI
+# API Gestión de Facturas - FastAPI
 
-Proyecto CRUD desarrollado con FastAPI para la gestión de clientes, facturas y transacciones.
+Proyecto CRUD desarrollado con **FastAPI**, **SQLModel** y **SQLite** para la gestión de clientes, facturas y transacciones.
 
 ---
 
 # Información del Proyecto
 
-- Nombre: Eileen Stefany Sánchez Galindo
-- Ficha SENA: 3407184
-- Programa: Análisis y Desarrollo de Software (ADSO)
+- **Nombre:** Eileen Stefany Sánchez Galindo
+- **Ficha SENA:** 3407184
+- **Programa:** Análisis y Desarrollo de Software (ADSO)
 
 ---
 
@@ -16,8 +16,11 @@ Proyecto CRUD desarrollado con FastAPI para la gestión de clientes, facturas y 
 
 Este proyecto fue desarrollado utilizando las siguientes tecnologías:
 
-- Python
+- Python 3
 - FastAPI
+- SQLModel
+- SQLite
+- SQLAlchemy
 - Pydantic
 - Uvicorn
 
@@ -26,7 +29,7 @@ Este proyecto fue desarrollado utilizando las siguientes tecnologías:
 # Estructura del Proyecto
 
 ```bash
-PROYECTO_FASTAPI/
+PROYECTO_FASTAPI_EILEEN/
 │
 ├── app/
 │   ├── models/
@@ -40,12 +43,14 @@ PROYECTO_FASTAPI/
 │   │   └── transacciones.py
 │   │
 │   ├── database.py
-│   └── main.py
+│   ├── app.py
+│   └── __init__.py
 │
-├── venv/
+├── base_datos.db
 ├── requirements.txt
+├── README.md
 ├── .gitignore
-└── README.md
+└── venv/
 ```
 
 ---
@@ -58,25 +63,19 @@ PROYECTO_FASTAPI/
 git clone <URL_DEL_REPOSITORIO>
 ```
 
----
-
-## 2. Ingresar a la carpeta del proyecto
+## 2. Ingresar al proyecto
 
 ```bash
-cd PROYECTO_FASTAPI
+cd PROYECTO_FASTAPI_EILEEN
 ```
 
----
-
-## 3. Crear entorno virtual
+## 3. Crear el entorno virtual
 
 ```bash
 python -m venv venv
 ```
 
----
-
-## 4. Activar entorno virtual
+## 4. Activar el entorno virtual
 
 ### Windows
 
@@ -84,13 +83,11 @@ python -m venv venv
 venv\Scripts\activate
 ```
 
-### Linux o Mac
+### Linux / Mac
 
 ```bash
 source venv/bin/activate
 ```
-
----
 
 ## 5. Instalar dependencias
 
@@ -98,86 +95,129 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-Si no tienes configurado el archivo requirements.txt puedes instalar manualmente:
+Si es necesario instalar manualmente:
 
 ```bash
-pip install fastapi uvicorn
+pip install fastapi uvicorn sqlmodel sqlalchemy pydantic
 ```
 
 ---
 
 # Ejecución del Proyecto
 
-## Opción 1: Ejecutar con Uvicorn
-
 Desde la raíz del proyecto ejecutar:
 
 ```bash
-uvicorn app.main:app --reload
+uvicorn app.app:app --reload
 ```
 
 El servidor iniciará en:
 
-```bash
+```text
 http://127.0.0.1:8000
-```
-
----
-
-## Opción 2: Ejecutar directamente con Python
-
-También puedes iniciar el proyecto ejecutando:
-
-```bash
-python app/main.py
-```
-
-Para que esta opción funcione correctamente, el archivo `main.py` debe contener:
-
-```python
-if __name__ == "__main__":
-    import uvicorn
-
-    uvicorn.run(
-        "app.main:app",
-        host="127.0.0.1",
-        port=8000,
-        reload=True
-    )
 ```
 
 ---
 
 # Documentación Automática
 
-FastAPI genera documentación automática para probar los endpoints de la API.
+FastAPI genera automáticamente la documentación de la API.
 
 ## Swagger UI
 
-```bash
+```text
 http://127.0.0.1:8000/docs
 ```
 
 ## ReDoc
 
-```bash
+```text
 http://127.0.0.1:8000/redoc
 ```
 
 ---
 
-# Funcionalidades del Proyecto
+# Base de Datos
 
-El sistema permite:
+El proyecto utiliza **SQLite** como sistema gestor de base de datos mediante **SQLModel**.
+
+Al iniciar la aplicación se crea automáticamente el archivo:
+
+```text
+base_datos.db
+```
+
+Las tablas creadas son:
+
+- clientes
+- facturas
+- transacciones
+
+Las relaciones implementadas son:
+
+- Una factura pertenece a un cliente.
+- Una transacción pertenece a una factura.
+
+---
+
+# Funcionalidades
+
+La API permite realizar operaciones CRUD para:
+
+## Clientes
 
 - Crear clientes
 - Consultar clientes
 - Actualizar clientes
 - Eliminar clientes
-- Gestionar facturas
-- Registrar transacciones
-- Validar datos utilizando Pydantic
-- Consumir endpoints REST
+
+## Facturas
+
+- Crear facturas
+- Consultar facturas
+- Actualizar facturas
+- Eliminar facturas
+
+## Transacciones
+
+- Crear transacciones
+- Consultar transacciones
+- Actualizar transacciones
+- Eliminar transacciones
+
+---
+
+# Endpoints
+
+## Clientes
+
+```
+GET    /clientes
+POST   /clientes
+GET    /clientes/{id}
+PUT    /clientes/{id}
+DELETE /clientes/{id}
+```
+
+## Facturas
+
+```
+GET    /facturas
+POST   /facturas
+GET    /facturas/{id}
+PUT    /facturas/{id}
+DELETE /facturas/{id}
+```
+
+## Transacciones
+
+```
+GET    /transacciones
+POST   /transacciones
+GET    /transacciones/{id}
+PUT    /transacciones/{id}
+DELETE /transacciones/{id}
+```
 
 ---
 
@@ -186,5 +226,16 @@ El sistema permite:
 ```txt
 fastapi
 uvicorn
+sqlmodel
+sqlalchemy
 pydantic
+sqlite3
 ```
+
+---
+
+# Autor
+
+**Eileen Stefany Sánchez Galindo**
+
+Proyecto FastAPI **Análisis y Desarrollo de Software (ADSO)** del **SENA**.
