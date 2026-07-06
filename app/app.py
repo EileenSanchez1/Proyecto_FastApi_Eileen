@@ -7,18 +7,6 @@ from app.routers.transacciones import router_transacciones
 
 app = FastAPI(
     title="API Gestión de Facturas",
-    description="""
-Sistema de gestión de ventas desarrollado con:
-
-- FastAPI
-- SQLModel
-- SQLite
-- Relaciones entre tablas
-- Facturas
-- Clientes
-- Transacciones
-- Cálculo automático de totales
-""",
     version="1.0.0"
 )
 
